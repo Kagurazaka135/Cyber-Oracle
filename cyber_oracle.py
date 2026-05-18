@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
+
 赛博神棍 (Cyber Oracle) —— 梅花易数时间卦法 + DeepSeek LLM 解读
 命令行易经算命程序
 用法：python cyber_oracle.py
@@ -32,6 +31,12 @@ try:
     from openai import OpenAI
 except ImportError:
     print("[X] 缺少依赖库 openai，请执行：pip install openai")
+    sys.exit(1)
+
+try:
+    import dateparser
+except ImportError:
+    print("[X] 缺少依赖库 dateparser，请执行：pip install dateparser")
     sys.exit(1)
 
 
@@ -309,17 +314,17 @@ def main():
     print("=" * 50)
 
     # ---- 4.1 获取公历时间 ----
-    time_input = input("\n请输入事件发生的公历时间（格式：YYYY-MM-DD HH:MM），直接回车使用当前时间：\n> ").strip()
+    time_input = input("\n请输入事件发生的公历时间（直接回车使用当前时间，支持多种格式）：\n> ").strip()
 
     if time_input == "":
         now = datetime.now()
         print(f"[OK] 使用当前系统时间：{now.strftime('%Y-%m-%d %H:%M')}")
     else:
-        try:
-            now = datetime.strptime(time_input, "%Y-%m-%d %H:%M")
-        except ValueError:
-            print("[X] 时间格式错误，请输入如 2025-06-15 14:30 的格式。")
+        dt = dateparser.parse(time_input, languages=["zh"])
+        if dt is None:
+            print("[X] 没看懂你输的时间，试试 2025-06-15 14:30 或 明天下午三点 这类格式。")
             sys.exit(1)
+        now = dt.replace(second=0, microsecond=0)
 
     # ---- 4.2 公历 → 农历转换 ----
     try:
