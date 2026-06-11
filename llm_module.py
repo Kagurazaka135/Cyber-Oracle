@@ -151,9 +151,55 @@ def _interpret_tarot(result: dict, user_question: str) -> str:
         raise RuntimeError(f"[X] 调用 LLM 失败：{e}")
 
 
+def _interpret_bone_weight(result: dict, user_question: str) -> str:
+    client = _get_client()
+    lunar = result["lunar"]
+    weights = result["weights"]
+    bone_weight = result["bone_weight"]
+
+    try:
+        response = client.chat.completions.create(
+            model="deepseek-v4-flash",
+            messages=[
+                {"role": "system", "content": (
+                    "你是一位精通袁天罡称骨法的命理大师。请按以下结构输出解读：\n\n"
+                    "一、骨重解析：解释这个骨重在称骨法中的地位——是轻是重？落在什么段位？"
+                    "从2两到7两的分布中它处于什么位置？记住：称骨法有一个有趣的统计现象——"
+                    "四个独立分量的加总会让大部分人的骨重自然落在3两到5两之间，"
+                    "落在两端的（极轻/极重）在概率上本来就极少。\n\n"
+                    "二、批语白话：将称骨歌原文用现代口语重新表达，让用户一看就懂，"
+                    "像朋友聊天一样，避免文言术语。\n\n"
+                    "三、切实建议：根据骨重格局，给出具体的生活建议。"
+                    "但务必强调：命格只是底色，后天努力才是真正的画笔。"
+                    "骨重轻的人靠勤奋弥补，骨重重的人靠谦虚守住。"
+                    "称骨看个乐子，日子靠自己过。\n\n"
+                    "注意：用朋友聊天的语气，不要教条，可以适当幽默。"
+                )},
+                {"role": "user", "content": (
+                    f"用户出生时间（公历）：{result['birth_dt']}\n"
+                    f"农历：{lunar['year_ganzhi']}年{lunar['lunar_month']}月"
+                    f"{lunar['lunar_day']}日 {lunar['shichen_name']}时\n"
+                    f"性别：{result['gender']}\n"
+                    f"四柱重量：年柱{weights['year']}钱 + 月柱{weights['month']}钱"
+                    f" + 日柱{weights['day']}钱 + 时柱{weights['hour']}钱"
+                    f" = 总骨重{result['bone_weight']}（{weights['total']}钱）\n"
+                    f"称骨歌批语原文：{result['poem']}\n"
+                    + (f"用户所问之事：{user_question}" if user_question else "")
+                )},
+            ],
+            temperature=0.7,
+            max_tokens=2000,
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        raise RuntimeError(f"[X] 调用 LLM 失败：{e}")
+
+
 def interpret(result: dict, user_question: str) -> str:
     """统一入口：根据 result 中的 method 自动路由到对应解读"""
     method = result.get("method", "")
     if "塔罗" in method:
         return _interpret_tarot(result, user_question)
+    if "称骨" in method:
+        return _interpret_bone_weight(result, user_question)
     return _interpret_hexagram(result, user_question)
