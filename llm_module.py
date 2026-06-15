@@ -195,6 +195,46 @@ def _interpret_bone_weight(result: dict, user_question: str) -> str:
         raise RuntimeError(f"[X] 调用 LLM 失败：{e}")
 
 
+def _interpret_zhuge(result: dict, user_question: str) -> str:
+    client = _get_client()
+    qd = result["qian_data"]
+    inp = result["input"]
+    chars_text = "".join(inp["chars"])
+
+    try:
+        response = client.chat.completions.create(
+            model="deepseek-v4-flash",
+            messages=[
+                {"role": "system", "content": (
+                    "你是一位精通诸葛神数的解签大师。请按以下结构输出解读：\n\n"
+                    "一、签文详解：解读签诗的含义，分析签名的意象。"
+                    "诸葛神数共384签，每签的签诗都是一首七言绝句，"
+                    "蕴含传统命理智慧。请结合签诗本身进行分析。\n\n"
+                    "二、与字关联：用户所报的三个字带有自身意念，"
+                    "请将三个字的意象与签诗内容相互印证，"
+                    "找出字与签之间的呼应关系。\n\n"
+                    "三、白话解读：用现代口语、生活化的语言重新解释一遍，"
+                    "像朋友聊天一样，避免文言和术语，让人一看就懂。\n\n"
+                    "四、切实建议：给出具体、可操作的行动建议。\n\n"
+                    "最后提醒：赛博神棍的话，看看就行了，别太当真。"
+                )},
+                {"role": "user", "content": (
+                    f"用户所报三个字：{chars_text}\n"
+                    f"康熙笔画数：{inp['strokes']}\n"
+                    f"求得 —— 第 {result['qian_number']} 签：{qd['title']}\n"
+                    f"签诗：\n{qd['poem']}\n"
+                    f"签文断语：{qd['interpretation']}\n"
+                    + (f"\n用户所问之事：{user_question}" if user_question else "")
+                )},
+            ],
+            temperature=0.7,
+            max_tokens=2000,
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        raise RuntimeError(f"[X] 调用 LLM 失败：{e}")
+
+
 def interpret(result: dict, user_question: str) -> str:
     """统一入口：根据 result 中的 method 自动路由到对应解读"""
     method = result.get("method", "")
@@ -202,4 +242,6 @@ def interpret(result: dict, user_question: str) -> str:
         return _interpret_tarot(result, user_question)
     if "称骨" in method:
         return _interpret_bone_weight(result, user_question)
+    if "诸葛" in method:
+        return _interpret_zhuge(result, user_question)
     return _interpret_hexagram(result, user_question)
