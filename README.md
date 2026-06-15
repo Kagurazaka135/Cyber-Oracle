@@ -75,7 +75,7 @@ Total bone weight range: 2.1–7.2 liang (1 liang = 10 qian). Most people land b
 | 2. Stroke count | Look up Kangxi Dictionary strokes per character (built-in dict ~200 chars; missing chars trigger manual input fallback) |
 | 3. Digit mapping | `stroke % 8`, remainder 0 → 8, giving 3 digits each 1–8 |
 | 4. Lot number | `hundreds×100 + tens×10 + ones`, then `while > 384: -384` |
-| 5. Lookup | Match lot number against `data/zhuge_qian.json` (384 lots total; currently 10 seeded) |
+| 5. Lookup | Match lot number against `methods/zhuge_qian.json` (384 lots total; currently 10 seeded) |
 | 6. Fallback | If lot number not in JSON, a default placeholder lot is used |
 
 ---
@@ -201,7 +201,7 @@ python main.py
 | 2. 数笔画 | 按康熙字典查每个字的笔画数（内置约 200 常用字；生僻字弹出手动输入） |
 | 3. 取数 | `笔画 % 8`，余 0 取 8，得 1-8 的三个数字 |
 | 4. 算签号 | `百位×100 + 十位×10 + 个位`，大于 384 则循环减 384 |
-| 5. 查签 | 签号匹配 `data/zhuge_qian.json`（共 384 签，目前录入 10 签） |
+| 5. 查签 | 签号匹配 `methods/zhuge_qian.json`（共 384 签，目前录入 10 签） |
 | 6. 兜底 | 查不到的签号返回占位签「三字通天地，一签问古今」 |
 
 ---
