@@ -35,6 +35,7 @@ except ImportError:
 from methods.plum_blossom import calculate as plum_blossom_calculate
 from methods.tarot import calculate as tarot_calculate
 from methods.bone_weight import calculate as bone_weight_calculate
+from methods.zhuge import calculate as zhuge_calculate
 from llm_module import interpret
 
 
@@ -42,6 +43,7 @@ METHODS = {
     "1": ("梅花易数时间卦法", plum_blossom_calculate),
     "2": ("塔罗牌占卜", tarot_calculate),
     "3": ("称骨算命", bone_weight_calculate),
+    "4": ("诸葛神数", zhuge_calculate),
 }
 
 
@@ -127,6 +129,30 @@ def _display_bone_weight(result: dict):
         print(f"  {line}")
 
 
+def _display_zhuge(result: dict):
+    qd = result["qian_data"]
+    inp = result["input"]
+    chars_text = "".join(inp["chars"])
+    strokes_info = "  ".join(
+        f"{inp['chars'][i]}={inp['strokes'][i]}画"
+        for i in range(len(inp["chars"]))
+    )
+
+    print(f"\n  你报的字：{chars_text}")
+    print(f"  康熙笔画：{strokes_info}")
+
+    print(f"\n  {'─' * 40}")
+    print(f"  ■ 第 {result['qian_number']} 签：{qd['title']}")
+    print(f"  {'─' * 40}")
+
+    print(f"  【签诗】")
+    for line in qd["poem"].split("\n"):
+        print(f"    {line}")
+
+    print(f"\n  【解签】{qd['interpretation']}")
+    print(f"  {'─' * 40}")
+
+
 def main():
     print("=" * 50)
     print("   * 赛博神棍 ")
@@ -135,6 +161,7 @@ def main():
     method_func, method_name = _select_method()
     is_tarot = "塔罗" in method_name
     is_bone = "称骨" in method_name
+    is_zhuge = "诸葛" in method_name
 
     if is_bone:
         print("\n请输入出生日期（公历，格式 YYYY-MM-DD）：")
@@ -178,6 +205,14 @@ def main():
         dt = datetime.now()
         #print(f"[OK] 使用当前时间：{dt.strftime('%Y-%m-%d %H:%M')}")
         result = method_func(dt, user_question)
+    elif is_zhuge:
+        print("\n诸葛神数：心中默念你的问题，然后输入三个汉字。")
+        chars = input("（比如'找工作'、'问姻缘'、'望前程'）\n> ").strip()
+        if not chars:
+            print("[X] 需要输入汉字哦，再见~")
+            sys.exit(1)
+        result = method_func(chars)
+        user_question = ""
     else:
         dt = _parse_time()
         result = method_func(dt, "")
@@ -187,6 +222,8 @@ def main():
         _display_tarot(result)
     elif is_bone:
         _display_bone_weight(result)
+    elif is_zhuge:
+        _display_zhuge(result)
     else:
         _display_hexagram(result)
 
