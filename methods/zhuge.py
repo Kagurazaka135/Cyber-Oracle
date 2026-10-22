@@ -59,7 +59,7 @@ KANGXI_STROKES = {
 def _load_qian_data():
     """加载签文 JSON，返回字典"""
     this_dir = os.path.dirname(__file__)
-    json_path = os.path.join(this_dir, "zhuge_qian.json")
+    json_path = os.path.join(this_dir, "..", "data", "zhuge_qian.json")
     if not os.path.exists(json_path):
         print(f"[警告] 神楽坂じゃん找不到签文了：{json_path}")
         return {}
